@@ -1,0 +1,40 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2015 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+-->
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceBlock name="logo">
+            <arguments>
+                <argument name="logo_img_width" xsi:type="number">193</argument>
+                <argument name="logo_img_height" xsi:type="number">37</argument>
+            </arguments>
+        </referenceBlock>
+        <referenceContainer name="form.subscribe" remove="true"/>
+        <!-- advance search customization start -->
+        <referenceBlock name="advanced-search-link" remove="true"/>
+        <move element="top.search" destination="header.panel" before="top.links"/>
+        <!-- Advance serach customization end  -->
+
+        <!-- header link customization start -->
+        <move element="minicart" destination="header.panel" after="my-account-link"/>
+        <referenceBlock name="wish-list-link" remove="true" /> 
+        <referenceBlock name="register-link" remove="true" /> 
+        <referenceBlock name="catalog.compare.link" remove="true"/>  
+        <!-- <move element="checkout" destination="header.panel" after="my-account-link"/> -->
+
+        <referenceContainer name="top.links">
+            <block class="Magento\Framework\View\Element\Html\Link\Current" name="checkout-link" after="my-account-link">
+                <arguments>
+                    <argument name="label" xsi:type="string" translate="true">Checkout</argument>
+                    <argument name="path" xsi:type="string">checkout</argument>
+                </arguments>
+            </block>
+        </referenceContainer>
+
+        <move element="navigation.sections" destination="header-wrapper" after="header.content"/>
+    </body>
+</page>
