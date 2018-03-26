@@ -35,6 +35,27 @@
             </block>
         </referenceContainer>
 
+<!-- Footer customization start -->
+<referenceBlock name="report.bugs" remove="true"/>
+<referenceBlock name="footer_links" remove="true" />
+<!--         <referenceBlock name="footer_links" >
+            <block class="Magento\Framework\View\Element\Html\Link\Current" name="2custom-link">
+                <arguments>
+                    <argument name="label" xsi:type="string">Custom Links</argument>
+                    <argument name="path" xsi:type="string">page-url</argument>
+                </arguments>
+            </block>
+        </referenceBlock>  -->
+<referenceContainer name="footer-container" >
+    <block class="Magento\Cms\Block\Block" name="footer-block" before="copyright">
+        <arguments>
+            <argument name="block_id" xsi:type="string">footer-block</argument>
+        </arguments>
+    </block>
+    <block class="Magento\Theme\Block\Html\Footer" name="copyright" template="html/copyright.phtml"/>
+</referenceContainer>
+        
+<!-- Footer customization End -->
         <move element="navigation.sections" destination="header-wrapper" after="header.content"/>
     </body>
 </page>

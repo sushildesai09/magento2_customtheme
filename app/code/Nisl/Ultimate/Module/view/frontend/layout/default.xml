@@ -1,0 +1,11 @@
+<referenceBlock name="footer_links">
+  <block class="Magento\Framework\View\Element\Html\Link" name="custom-link">
+    <arguments>
+      <argument name="label" xsi:type="string">Custom Link</argument>
+      <!-- This will be displayed as the label of the link -->
+      <argument name="path" xsi:type="string">path/to/page</argument>
+      <!-- here give the path where the link redirect to -->
+    </arguments>
+  </block>
+</referenceBlock>
+ 

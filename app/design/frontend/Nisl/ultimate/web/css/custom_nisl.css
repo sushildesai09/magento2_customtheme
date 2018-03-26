@@ -58,3 +58,9 @@
 .our_client .row {
 	text-align: center;
 }
+#footer-bar {
+    margin-left: 205px;
+}
+.page-footer .row .span5 {display: inline-block; width: 570px; }
+.page-footer .row .span4 {display: inline-block; width: 370px; }
+.page-footer .row .span3 {display: inline-block; width: 270px; }
