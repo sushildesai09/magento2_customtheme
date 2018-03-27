@@ -38,6 +38,8 @@
 <!-- Footer customization start -->
 <referenceBlock name="report.bugs" remove="true"/>
 <referenceBlock name="footer_links" remove="true" />
+<referenceBlock name="breadcrumbs" remove="true" />
+<referenceBlock name="page.main.title" display="false"/>
 <!--         <referenceBlock name="footer_links" >
             <block class="Magento\Framework\View\Element\Html\Link\Current" name="2custom-link">
                 <arguments>
