@@ -1,0 +1,8 @@
+<?xml version="1.0"?>
+
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../../Backend/etc/menu.xsd">
+    <menu>
+        <add id="Nisl_Overwritecore::nisl_overwrite_index" title="nisl_menu" module="Nisl_Overwritecore"  sortOrder="20" dependsOnModule="Nisl_Overwritecore" action="overwritecore/overwrite/index" resource="Nisl_Overwritecore::nisl_overwrite_index"/>
+<!--AddMenu-->
+    </menu>
+</config>
