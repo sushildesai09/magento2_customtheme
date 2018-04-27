@@ -1,0 +1,12 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2015 Nisl. All rights reserved.
+ */
+-->
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="../../Backend/etc/menu.xsd">
+    <menu>
+        <add id="nisl::base" title="Nisl" module="Nisl_First" sortOrder="90" resource="Nisl_First::sample"/>
+        <add id="nisl_first::first" title="Items" module="Nisl_First" sortOrder="10" parent="nisl::base" action="nisl_first/items/" resource="Nisl_First::items"/>
+    </menu>
+</config>

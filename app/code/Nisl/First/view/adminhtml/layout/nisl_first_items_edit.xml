@@ -1,0 +1,23 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Copyright © 2015 Nisl. All rights reserved.
+ */
+-->
+
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" layout="admin-2columns-left" xsi:noNamespaceSchemaLocation="../../../../../../../lib/internal/Magento/Framework/View/Layout/etc/page_configuration.xsd">
+    <body>
+        <referenceContainer name="left">
+            <block class="Nisl\First\Block\Adminhtml\Items\Edit\Tabs" name="nisl_first_items_edit_tabs">
+                <block class="Nisl\First\Block\Adminhtml\Items\Edit\Tab\Main" name="nisl_first_items_edit_tab_main"/>
+                <action method="addTab">
+                    <argument name="name" xsi:type="string">main_section</argument>
+                    <argument name="block" xsi:type="string">nisl_first_items_edit_tab_main</argument>
+                </action>
+            </block>
+        </referenceContainer>
+        <referenceContainer name="content">
+            <block class="Nisl\First\Block\Adminhtml\Items\Edit" name="first_items_edit"/>
+        </referenceContainer>
+    </body>
+</page>
