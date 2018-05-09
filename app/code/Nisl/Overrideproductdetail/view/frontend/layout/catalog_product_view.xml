@@ -1,0 +1,27 @@
+<page xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:framework:View/Layout/etc/page_configuration.xsd">
+
+    <body>
+      <!-- <referenceBlock name="product.info.addtocart" /> -->
+      <!--   <referenceContainer name="product.info.addtocart">
+            <block class="Lof\HidePrice\Block\Product\View" name="product.info.addtocart" as="product.info.addtocart" template="Nipl_Overrideproductdetail::product/view/addtocart.phtml" />
+        </referenceContainer> -->
+
+     <!--    <referenceContainer name="product.info.form.content">
+	            <block class="Lof\HidePrice\Block\Product\View" name="product.info.addtocart" as="addtocart" template="Nipl_Overrideproductdetail::product/view/addtocart.phtml"/>
+	        </referenceContainer> -->
+<!-- 
+        <referenceBlock class="Magento\Catalog\Block\Product\View" name="product.info.options.wrapper.bottom" as="product_options_wrapper_bottom" template="Nipl_Overrideproductdetail::product/view/addtocart.phtml">
+                <block class="Lof\HidePrice\Block\Product\View" name="product.info.addtocart.additional" as="product.info.addtocart" template="Nipl_Overrideproductdetail::product/view/addtocart.phtml"/>
+            </referenceBlock> -->
+	    <!-- <referenceBlock name="product.info.addtocart.additional">
+           <action method="setTemplate">
+               <argument name="template" xsi:type="string">Nipl_Overrideproductdetail::product/view/addtocart.phtml</argument>
+           </action>
+       </referenceBlock>
+        <referenceBlock name="product.info.addtocart">
+           <action method="setTemplate">
+               <argument name="template" xsi:type="string">Nipl_Overrideproductdetail::product/view/addtocart.phtml</argument>
+           </action>
+       </referenceBlock> -->
+    </body>
+</page>

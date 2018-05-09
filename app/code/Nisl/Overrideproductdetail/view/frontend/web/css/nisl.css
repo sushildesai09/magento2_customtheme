@@ -1,0 +1,16 @@
+/* Simple product css start*/
+.product-info-main .available_qty label span{font-size: 16px;font-weight: 600;}
+.product-info-main .available_qty label {display: inline-block;}
+.product-info-main .available_qty{margin-bottom: 15px;}
+.product-info-main .free_shipping_label label span{font-size: 16px;color: #7a7a7a;}
+.product-info-main .free_shipping_label{margin-bottom: 15px;}
+.product-info-main .field.qty label span{font-size: 16px;}
+.product-info-main .field.qty label{display: inline-block; }
+.product-info-main .field.qty .control{display: inline-block;margin-left: 10px;}
+.product-info-main .available_qty_value{display: inline-block;color: #7a7a7a;margin-left: 11px;font-size: 16px;}
+/* Simple product css End*/
+
+/* Configurable product css start*/
+#product-attribute-specs-table .available_qty label span{font-size: 12px;}
+.quantity_head{width: 50px;}
+/* Configurable product css End*/
