@@ -23,5 +23,8 @@
                <argument name="template" xsi:type="string">Nipl_Overrideproductdetail::product/view/addtocart.phtml</argument>
            </action>
        </referenceBlock> -->
+        <referenceContainer name="product.info.form.content">
+           <block class="Lof\HidePrice\Block\Product\View" name="product.info.addtocart" template="Nisl_Overrideproductdetail::product/view/addtocart.phtml" />
+       </referenceContainer>
     </body>
 </page>

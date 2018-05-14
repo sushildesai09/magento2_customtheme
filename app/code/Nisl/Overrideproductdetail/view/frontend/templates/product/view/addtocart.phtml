@@ -2,17 +2,17 @@
 $ObjectManager= \Magento\Framework\App\ObjectManager::getInstance();
 $context = $ObjectManager->get('Magento\Framework\App\Http\Context');
 $validator = $ObjectManager->get('Lof\HidePrice\Model\Validator');
-
+    
 $isLoggedIn = $context->getValue(\Magento\Customer\Model\Context::CONTEXT_AUTH);
 $customer_group_current = $context->getValue(\Magento\Customer\Model\Context::CONTEXT_GROUP);
 $helper = $this->helper("Lof\HidePrice\Helper\Data");
 $maxWidth = $helper->getConfig('general/max_width');
 $maxHeight = $helper->getConfig('general/max_height');
 $minWidth = $helper->getConfig('general/min_width');
-$minHeight = $helper->getConfig('general/min_height');
+$minHeight = $helper->getConfig('general/min_height'); 
 $_product = $block->getProduct();
 $product_id = $_product->getId(); 
-$validate = $validator->validate($product_id);
+$validate = $validator->validate($product_id);  
 $buttonTitle = __('Add to Cart');
 $connection = $this->_resource->getConnection();
 $table = $this->_resource->getTableName('lof_hideprice_product');
@@ -23,7 +23,81 @@ $hideprice = $connection->fetchAll($select);
 
 $addtocart = '';
 ?>
+<?php 
+// $this->_scopeConfig->getValue('sectionName/groupName/fieldName');
+//echo $block->getGeneralConfig(); 
+?>
 <?php if ($_product->isSaleable()): 
+ $enabel_config = $block->getLayout()->createBlock('Nisl\Overrideproductdetail\Block\Overrideproductdetail');
+    $nisl_enable = $enabel_config->getGeneralConfig();  
+
+if ($nisl_enable == '1') {
+
+$priority_one = $enabel_config->getPriorityOne();
+$priority_two = $enabel_config->getPriorityTwo();
+$priority_three = $enabel_config->getPriorityThree();
+
+$warehouseCollectionFactory = $ObjectManager->get('\Amasty\MultiInventory\Model\ResourceModel\Warehouse\CollectionFactory');
+$collection = $warehouseCollectionFactory->create();
+$collection->addFieldToFilter('priority', array('neq' => 0));
+$collection->addFieldToFilter('manage',1);
+$collection->getSelect()->order('priority ASC');
+// echo "<pre>";
+// var_dump($collection->getData()); die();
+if($collection->getSize()){
+    $addtocart = "Out of Stock";
+    foreach ($collection as $key => $value) {       
+        $warehouse_id = $value['warehouse_id'];
+        $priority = $value['priority'];       
+        $stockItemRepository = $ObjectManager->get('\Amasty\MultiInventory\Api\WarehouseItemRepositoryInterface');
+        $_productStock = $stockItemRepository->getByProductWarehouse($product_id,$warehouse_id);
+        $_productStock_data = $_productStock->getData();
+        if(isset($_productStock_data) AND !empty($_productStock_data)) {
+
+        // echo "<pre>";
+        // var_dump($_productStock_data); die('here');
+        $available_qty = intval($_productStock_data['available_qty']);
+        if($available_qty > 0){
+             // $addtocart ='<div class="available_qty"><label class="label"><span>'.__('').'</span></label><div class="available_qty_value">'. intval($available_qty).'</div></div>';
+             $addtocart ='<div></div>';
+
+            if($priority == 0){
+                $addtocart .='<div class="free_shipping_label"><label class="label"><span>'.__('').'</span><button type="button" class="btn btn-info btn-lg btn_question" data-toggle="modal" data-target="#myModal">?</button></label></div>';
+            }else if($priority == 1){
+                $addtocart .='<div class="free_shipping_label"><label class="label"><span>'.__($priority_one).'</span><button type="button" class="btn btn-info btn-lg btn_question" data-toggle="modal" data-target="#myModal">?</button></label></div>';
+            }else if($priority == 2){
+                $addtocart .='<div class="free_shipping_label"><label class="label"><span>'.__($priority_two).'</span><button type="button" class="btn btn-info btn-lg btn_question" data-toggle="modal" data-target="#myModal">?</button></label></div>';
+            }
+            else if($priority == 3){
+                $addtocart .='<div class="free_shipping_label"><label class="label"><span>'.__($priority_three).'</span><button type="button" class="btn btn-info btn-lg btn_question" data-toggle="modal" data-target="#myModal">?</button></label></div>';
+            }
+            break;
+        }
+    }
+    } ?>
+    <div>
+    <?php
+        $addtocart .='<div class="warehouse_wrap">';
+        foreach ($collection as $key => $data) 
+        {
+
+            $warehouse_id = $data['warehouse_id'];
+            $warehouse_name = $data['title'];
+
+            $stockItemRepository = $ObjectManager->get('\Amasty\MultiInventory\Api\WarehouseItemRepositoryInterface');
+            $_productStock = $stockItemRepository->getByProductWarehouse($product_id,$warehouse_id);
+            $_productStock_data = $_productStock->getData(); 
+            if(isset($_productStock_data) AND !empty($_productStock_data)) {
+                $addtocart .='<div class="warehouse_qty">'.$warehouse_name.' : '.intval($_productStock_data['available_qty']).'</div>'; //warehouse name with qty
+            }
+        }   
+        $addtocart .='</div>';
+        ?> 
+    </div>
+<?php
+}
+
+}
 $addtocart .= '<div class="box-tocart">
     <div class="fieldset">';
         if ($block->shouldRenderQuantity()): 
@@ -100,6 +174,7 @@ if ((count($hideprice) > 0 || $validate) && $helper->getConfig('general/enable_m
 
             });
         </script>
+
 <?php  
     }  
 } else { 
@@ -127,3 +202,21 @@ if ((count($hideprice) > 0 || $validate) && $helper->getConfig('general/enable_m
     }
 </script>
 <?php endif; ?>
+<script type="text/javascript">
+// jQuery( document ).ready(function() {
+// jQuery(".btn_question").click(function(){
+//     jQuery(".warehouse_wrap").toggle();
+// });
+// });
+</script>
+<script type="text/javascript">
+                    require([
+                        'jquery'
+                        ], function($){
+                        jQuery(document).ready(function($) {
+                           jQuery(".btn_question").click(function(){
+                                jQuery(".warehouse_wrap").toggle();
+                            });
+                        });
+                    });
+                </script>
