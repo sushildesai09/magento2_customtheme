@@ -1,0 +1,653 @@
+<?php
+use Magento\Framework\App\Action\Action;
+
+/**
+ * Copyright © 2016 Magento. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+// @codingStandardsIgnoreFile
+
+/**
+ * Product additional attributes template
+ *
+ * @var $block \Magento\Catalog\Block\Product\View\Attributes
+ */
+?>
+<?php
+$enabel_config = $block->getLayout()->createBlock('Nisl\Overrideproductdetail\Block\Overrideproductdetail');
+$nisl_enable = $enabel_config->getGeneralConfig(); 
+
+$sortable = ['wheel_size', 'wheel_width', 'bolt_pattern', 'offsetmm'];
+$order = $this->getRequest()->getParam('order', false);
+$dir = $this->getRequest()->getParam('dir', false) == 'ASC' ? 'DESC' : 'ASC';
+
+if ($this->getRequest()->getParam('wheel_size', '') != '') {
+    $sizes = explode(",", $this->getRequest()->getParam('wheel_size', FALSE));
+} else {
+    $sizes = [];
+}
+if ($this->getRequest()->getParam('bolt_pattern','') != ''){
+    $bolt_pattern = $this->getRequest()->getParam('bolt_pattern','');
+} else {
+    $bolt_pattern = null;
+}
+
+if ($this->getRequest()->getParam('offsetmm_max','') != ''){
+    $offsetmm_max = $this->getRequest()->getParam('offsetmm_max','');
+} else {
+    $offsetmm_max = null;
+}
+
+if ($this->getRequest()->getParam('offsetmm_min','') != ''){
+    $offsetmm_min = $this->getRequest()->getParam('offsetmm_min','');
+} else {
+    $offsetmm_min = null;
+}
+
+if ($this->getRequest()->getParam('center_bore_min','') != ''){
+    $center_bore_min = $this->getRequest()->getParam('center_bore_min','');
+} else {
+    $center_bore_min = null;
+}
+
+$_helper = $this->helper('Magento\Catalog\Helper\Output');
+
+$attributeSetName = $block->getAttributeSetName();
+if ($attributeSetName == 'Tires') {
+    $order = 'tread_width';
+    $dir = 'ASC';
+}
+$allparams = $this->getRequest()->getParams();
+$isStaggered=isset($allparams['staggered']) && $allparams['staggered']!=NULL;
+$isStaggeredTires=false;
+if($isStaggered && isset($allparams['front']) && $allparams['front']!=NULL && isset($allparams['back']) && $allparams['back']!=NULL)
+{
+    $isStaggeredTires=true;
+}
+
+?>
+<?php
+if ($_items = $block->getItems($order, $dir, $sizes, $bolt_pattern, $offsetmm_max, $center_bore_min)):
+
+	//echo "<pre>"; print_r($_items);
+	//die("SDF");
+	// foreach ($_items as $mainkey=> $_item) {  echo $_items[$mainkey]['size']['value']; echo "<br/>";	 }
+    $_product = $block->getProduct();
+
+    if ($_product->getTypeID() == 'configurable'): ?>
+
+        <div class="additional-attributes-wrapper table-wrapper">
+            <table class="data table additional-attributes" id="product-attribute-specs-table" style="width:100%">
+                <caption class="table-caption"><?php /* @escapeNotVerified */
+                    echo __('Sizes & Prices'); ?></caption>
+                <tbody>
+                <tr class="product-columnName">
+                    <?php foreach ($block->getFields() as $key => $fld){ ?>
+                    <th class="col data">
+                        <?php echo __($fld); ?>
+
+                        <?php } ?></th>
+                    <?php if($nisl_enable == '1') { ?>    
+                    <th>Shipping</th>
+                    <?php } ?>
+                    <th class="quantity_head">Quantity</th>
+                    <th>&nbsp;</th>
+                </tr>
+				<?php $sizeoptionIds=array();?>
+
+                <?php
+                function sortProducts($a, $b){
+                    if(array_key_exists('wheel_size',$a) && array_key_exists('wheel_size',$b) && $a['wheel_size']['value'] == $b['wheel_size']['value']){
+                        if(array_key_exists('wheel_width',$a) && array_key_exists('wheel_width',$b) && $a['wheel_width']['value'] == $b['wheel_width']['value']) {
+                            if(array_key_exists('bolt_pattern_1',$a) && array_key_exists('bolt_pattern_1',$b) && $a['bolt_pattern_1']['value'] == $b['bolt_pattern_1']['value']) {
+                                if (array_key_exists('offsetmm',$a) && array_key_exists('offsetmm',$b))
+                                    return strcmp($a['offsetmm']['value'], $b['offsetmm']['value']);
+                                else
+                                    return 0;
+                            }
+                            if (array_key_exists('bolt_pattern_1',$a) && array_key_exists('bolt_pattern_1',$b))
+                                return strcmp($a['bolt_pattern_1']['value'], $b['bolt_pattern_1']['value']);
+                            else
+                                return 0;
+                        }
+                        if (array_key_exists('wheel_width',$a) && array_key_exists('wheel_width',$b))
+                            return strcmp($a['wheel_width']['value'], $b['wheel_width']['value']);
+                        else
+                            return 0;
+                    }
+                    if (array_key_exists('wheel_size',$a) && array_key_exists('wheel_size',$b))
+                        return strcmp($a['wheel_size']['value'], $b['wheel_size']['value']);
+                    else
+                        return 0;
+                }
+
+                function filterStaggeredTires($item, $allparams) {
+                    if ($item['size']['value']) {
+                        $sizeval = str_replace('/','-',$item['size']['value']);
+
+                        if ($sizeval === $allparams['front'] || $sizeval === $allparams['back']) {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                }
+
+                function getFrontOrBackTire($items, $currentItem, $allparams, $frontOrBack) {
+                    $count = 0;
+                    $dash = '-';
+                    $currentTireSize = $currentItem['tread_width']['value'] . $dash . $currentItem['wheel_profile']['value'] . $dash . $currentItem['wheel_size']['value'];
+
+                    foreach ($items as $item) {
+                        $tiresize = $item['tread_width']['value'] . $dash . $item['wheel_profile']['value'] . $dash . $item['wheel_size']['value'];
+
+                        if ($allparams[$frontOrBack] === $tiresize) {
+                            $count++;
+                        }
+                    }
+
+                    if ($count > 1 && $allparams[$frontOrBack] === $currentTireSize) return true;
+                    return false;
+                }
+
+                usort($_items, 'sortProducts');
+
+                // If searching staggered tires, filter out all un-compatible options
+                if($isStaggeredTires) {
+                    $_items = array_filter($_items, function ($item) use ($allparams) {
+                        return filterStaggeredTires($item, $allparams);
+                    });
+                }
+
+                // Build table
+                $i = 0;
+                foreach ($_items as $mainkey=> $_item) { ?>
+                <?php  $i++; ?>
+                    <tr class="product-columnInfo">
+                        <?php foreach ($block->getFields() as $key => $fld) { ?>
+                            <td class ="product-columnInfoStyle">
+                                <?php
+                                if ($key =='sku') {
+                                    if (isset($_item['offsetmm']['value'])){
+                                        if (floatval($_item['offsetmm']['value'])<$offsetmm_min){
+                                            echo '<img src="https://www.soratwheels.ca/pub/static/frontend/Soratwheels/Blue/en_US/images/notice.png" width="15px" title="Offset Warning: the wheel offset and perhaps width falls outside of the safe range, mostly meant for levelled or lifted applications"/>';
+                                        }else{
+                                            echo '<img src="https://www.soratwheels.ca/pub/static/frontend/Soratwheels/Blue/en_US/images/ok.png" width="15px"/>';
+                                        }
+                                    }
+
+                                }
+
+                                if ($key == 'price' && isset($_item['special_price']) && $_item['special_price']['value'] !== null) {
+                                    echo"<div style='color: red;'> {$_item['special_price']['value']} </div> <div style='text-decoration: line-through; text-decoration-color: red;'> {$_item[$key]['value']} </div>";
+                                }
+                                else {
+                                    echo isset($_item[$key]) ? $_item[$key]['value'] : ' - ';
+                                } ?>
+
+							</td>
+                        <?php } ?>
+                        <?php  
+                                if($nisl_enable == '1') { ?>
+                        <td>                                                         
+                                <?php 
+                                $priority_one = $enabel_config->getPriorityOne();
+                                $priority_two = $enabel_config->getPriorityTwo();
+                                $priority_three = $enabel_config->getPriorityThree();
+
+                                $ObjectManager= \Magento\Framework\App\ObjectManager::getInstance();
+                                $warehouseCollectionFactory = $ObjectManager->get('\Amasty\MultiInventory\Model\ResourceModel\Warehouse\CollectionFactory');
+                                $collection = $warehouseCollectionFactory->create();
+                                $collection->addFieldToFilter('priority', array('neq' => 0));
+                                $collection->addFieldToFilter('manage',1);
+                                $collection->getSelect()->order('priority ASC');                                
+                                if($collection->getSize()){
+                                    $addtocart = "Out of Stock";
+                                    
+                                    foreach ($collection as $key => $value) {      
+                                                                       
+                                        $warehouse_id = $value['warehouse_id'];                                        
+                                        $priority = $value['priority'];       
+                                        $stockItemRepository = $ObjectManager->get('\Amasty\MultiInventory\Api\WarehouseItemRepositoryInterface');
+                                        $_productStock = $stockItemRepository->getByProductWarehouse($_item['entity_id']['value'],$warehouse_id);
+                                       // echo "<pre>"; var_dump($_productStock); die('here');
+
+                                        $_productStock_data = $_productStock->getData();    
+                                        if(isset($_productStock_data) AND !empty($_productStock_data)) {                                    
+                                        //$available_qty = intval($_productStock_data['available_qty']);                                       
+                                        if(isset($_productStock_data['available_qty']) && $_productStock_data['available_qty'] > 0){
+                                            // $addtocart ='<div class="available_qty"><div class="available_qty_value">'. intval($_productStock_data['available_qty']).'</div></div>';
+                                              $addtocart ='<div class="available_qty"><div class="available_qty_value"></div></div>';
+                                            if($priority == 0){
+                                                $addtocart .='<div class="available_qty"><label class="label"><span>'.__('').'</span><button type="button" id="'.$i.'" class="btn btn-info btn-lg btn_question" data-toggle="modal" data-target="#myModal">?</button></label></div>';
+                                            }else if($priority == 1){
+                                                $addtocart .='<div class="available_qty"><label class="label"><span>'.__($priority_one).'</span><button type="button" id="'.$i.'" class="btn btn-info btn-lg btn_question" data-toggle="modal" data-target="#myModal">?</button></label></div>';
+                                            }else if($priority == 2){
+                                                $addtocart .='<div class="available_qty"><label class="label"><span>'.__($priority_two).'</span><button type="button" id="'.$i.'" class="btn btn-info btn-lg btn_question" data-toggle="modal" data-target="#myModal">?</button></label></div>';
+                                            }
+                                            else if($priority == 3){
+                                                $addtocart .='<div class="available_qty"><label class="label"><span>'.__($priority_three).'</span><button type="button" id="'.$i.'" class="btn btn-info btn-lg btn_question" data-toggle="modal" data-target="#myModal">?</button></label></div>';
+                                            }
+                                            break;
+                                        } 
+                                    } 
+                                    }
+                                    echo $addtocart;
+                                } ?>    
+                                    <?php
+                                    echo '<div class="warehouse_wrap"  id="block_'.$i.'">';
+                                    foreach ($collection as $key => $data) 
+                                    {
+                                        $warehouse_id = $data['warehouse_id'];
+                                        $warehouse_name = $data['title'];
+
+                                        $stockItemRepository = $ObjectManager->get('\Amasty\MultiInventory\Api\WarehouseItemRepositoryInterface');
+                                        $_productStock = $stockItemRepository->getByProductWarehouse($_item['entity_id']['value'],$warehouse_id);
+                                        $_productStock_data = $_productStock->getData(); 
+                                        //echo "<pre>"; var_dump($_productStock_data); die('yah');
+                                        if(isset($_productStock_data) AND !empty($_productStock_data)) {
+                                        echo '<div class="warehouse_qty">'.$warehouse_name.' : '.intval($_productStock_data['available_qty']).'</div>'; //warehouse name with qty
+                                    }
+                                    } 
+                                    echo '</div>'; ?> 
+
+                       
+                        </td>
+                    <?php } ?>
+                        <?php $postParams = $_item['cart']['value']; ?>
+                        <form data-role="tocart-form" action="<?php /* @escapeNotVerified */
+                        echo $postParams['action']; ?>" method="post">
+                            <?php echo $block->getBlockHtml('formkey'); ?>
+                            <td>
+
+                                <input type="number" name="qty" id="qty" maxlength="12" title="Qty" <?php if($isStaggered){?> value="2" <?php }else{ ?> value="4" <?php }?>  class="input-text qty"">
+                            </td>
+                            <td>
+                                <input type="hidden" name="product" value="<?php /* @escapeNotVerified */
+                                echo $postParams['data']['product']; ?>">
+                                <input type="hidden" name="<?php /* @escapeNotVerified */
+                                echo Action::PARAM_NAME_URL_ENCODED; ?>" value="<?php /* @escapeNotVerified */
+                                echo $postParams['data'][Action::PARAM_NAME_URL_ENCODED]; ?>">
+
+                                <?php // Drop down to select front and back staggered wheels and tires ?>
+                                <?php if ($isStaggered) {
+
+                                // Tires
+                                if($isStaggeredTires) {
+                                    if (sizeof($_items) === 2) { ?>
+                                        <select disabled>
+                                    <?php } else { ?>
+                                        <select
+                                            class="frontOrBackTires"
+                                            onChange="tireDropDownChanged(this)">
+                                    <?php }
+
+                                    $dash = '-';
+                                    $tiresize = $_item['tread_width']['value'] . $dash . $_item['wheel_profile']['value'] . $dash . $_item['wheel_size']['value'];
+
+                                    if ($allparams['front'] === $tiresize) { ?>
+                                        <?php if (getFrontOrBackTire($_items, $_item, $allparams, 'front')) { ?>
+                                            <option value="select"> Select </option>
+                                        <?php } ?>
+                                        <option value="front">Front</option>
+
+                                    <?php } else if ($allparams['back'] === $tiresize) { ?>
+                                        <?php if (getFrontOrBackTire($_items, $_item, $allparams, 'back')) { ?>
+                                            <option value="select"> Select</option>
+                                        <?php } ?>
+                                        <option value="back">Back</option>
+                                        <?php } ?>
+                                </select>
+                                <?php }
+
+                                // Wheels
+                                else if (sizeof($_items) === 2) { ?>
+                                    <select disabled>
+                                        <?php $wheelwidth = floatval($_item['wheel_width']['value']);
+                                        for ($i = 0; $i < 2; $i++) {
+                                            $comparison = floatval($_items[$i]['wheel_width']['value']);
+                                            if ($wheelwidth < $comparison) { ?>
+                                                <option value="front">Front</option>
+                                            <?php } else if ($wheelwidth > $comparison) { ?>
+                                                <option value="back">Back</option>
+                                            <?php }
+                                        } ?>
+                                    </select>
+                                <?php } else {
+                                    $wheelsize = $_item['wheel_size']['value'];
+                                    $wheelwidth = $_item['wheel_width']['value']; ?>
+                                    <select
+                                        class="frontOrBack"
+                                        id="<?php echo $_item['sku']['value'] ?>"
+                                        data-size="<?php echo $wheelsize ?>"
+                                        data-width="<?php echo $wheelwidth ?>"
+                                        onchange="wheelDropDownChanged(this)" >
+                                        <option value="select">Select</option>
+                                        <option value="front">Front</option>
+                                        <option value="back">Back</option>
+                                    </select>
+                                <?php
+                                }
+                            } else {
+                                // Add to cart button for standard wheels and tires - they have to be different!  ?>
+                                <?php if ($attributeSetName == 'Tires') { ?>
+                                <button type="submit"
+                                        title="<?php echo $block->escapeHtml(__('Add to Cart')); ?>"
+                                        class="action tocart primary">
+                                    <span><?php /* @escapeNotVerified */
+                                        echo __('Add to Cart') ?></span>
+                                </button>
+                                <?php } else { ?>
+                                <button
+                                    type="button"
+                                    title="<?php echo $block->escapeHtml(__('Add to Cart')); ?>"
+                                    class="action tocart primary"
+                                    data-staggered="<?php echo $isStaggered ?>"
+                                    onclick="loadPopUp(this)" >
+                                    <span><?php /* @escapeNotVerified */
+                                        echo __('Add to Cart') ?></span>
+                                </button>
+                                <?php } ?>
+                            <?php } ?>
+                        </td>
+                    </form>
+                </tr>
+
+                <?php } ?>
+                <tr><td colspan="<?php echo(count($block->getFields())+2) ?>">
+
+                    <?php // Add to cart button for staggered wheels and tires
+                    if ($isStaggered) { ?>
+                        <button
+                            <?php if (sizeof($_items) > 2) { ?>
+                                disabled
+                            <?php } ?>
+                                type="button"
+                                title="<?php echo $block->escapeHtml(__('Add to Cart')); ?>"
+                                class="action tocart primary"
+                                style="float: right"
+                                data-staggered="<?php echo $isStaggered ?>"
+                                onclick="<?php if ($isStaggeredTires) {?> addStaggeredToCart() <?php } else { ?> loadPopUp(this) <?php } ?>" >
+                        <span><?php /* @escapeNotVerified */
+                            echo __('Add to Cart') ?>
+                        </span>
+                        </button>
+                    <?php } ?>
+                </td></tr>
+            </tbody>
+        </table>
+        <script>
+            window.host='https://www.soratwheels.ca/pub/static/frontend/Soratwheels/ReactJS'
+
+            window.baseUrl='https://www.soratwheels.ca'
+
+            function loadPopUp(ref) {
+                if (jQuery(ref).attr('data-staggered')) {
+                    var front = getWheelInfo('front');
+                    var back = getWheelInfo('back');
+
+                    window.product = {
+                        'action': jQuery('form', jQuery(front)).attr('action'),
+                        'front': {
+                            'product': jQuery('input[name=product]', jQuery(front)).attr('value'),
+                            'qty': jQuery('input[name=qty]', jQuery(front)).attr('value')
+                        },
+                        'back': {
+                            'product': jQuery('input[name=product]', jQuery(back)).attr('value'),
+                            'qty': jQuery('input[name=qty]', jQuery(back)).attr('value')
+                        },
+                        'uenc': jQuery('input[name=uenc]', jQuery(front)).attr('value'),
+                        'form_key': jQuery('input[name=form_key]', jQuery(front)).attr('value'),
+                        'wheel_size': jQuery.trim(jQuery('td:nth-child(2)',jQuery(front)).html().replace(/ /g,''))
+                    }
+                } else {
+                    window.product = {
+                        'action': jQuery('form', jQuery(ref).parent().parent()).attr('action'),
+                        'product': jQuery('input[name=product]', jQuery(ref).parent().parent()).attr('value'),
+                        'qty': jQuery('input[name=qty]', jQuery(ref).parent().parent()).attr('value'),
+                        'uenc': jQuery('input[name=uenc]', jQuery(ref).parent().parent()).attr('value'),
+                        'form_key': jQuery('input[name=form_key]', jQuery(ref).parent().parent()).attr('value'),
+                        'wheel_size': jQuery.trim(jQuery('td:nth-child(2)', jQuery(ref).parent().parent()).html().replace(/ /g, ''))
+                    }
+                }
+
+                jQuery("#overlaydiv").show();
+                loadScript('/pub/static/frontend/Soratwheels/ReactJS/product-bundle.min.js')
+//                    loadScript('http://localhost:8080/product-bundle.js');
+            }
+
+            function getWheelInfo(frontOrBack) {
+                return jQuery('tr', '#Sizes').filter(function(index, item) {
+                    var select = jQuery('select',jQuery(item));
+                    if (select.length < 1) return false;
+                    else if (select.find(':selected').val() === frontOrBack)
+                        return true;
+                    else return false;
+                }).each(function(index,item) {
+                    return item;
+                });
+            }
+
+            function tireDropDownChanged(element) {
+                var allItems = jQuery(".frontOrBackTires");
+                var selectedTire = jQuery(element).find(':selected').val();
+
+                if (selectedTire === 'select') {
+                    jQuery('button[type=button]','#Sizes').attr('disabled', 'disabled');
+
+                    allItems.each(function() {
+                        jQuery(this).removeAttr('disabled');
+                    })
+
+                } else {
+                    jQuery('button[type=button]', '#Sizes').removeAttr('disabled');
+
+                    allItems.each(function() {
+                        if (jQuery(this).find(':selected').attr('value') === 'select') {
+                            jQuery(this).attr('disabled', 'disabled');
+                        }
+                    })
+                }
+            }
+
+            function wheelDropDownChanged(element) {
+                var allItems = jQuery(".frontOrBack");
+                var unselectionMade = jQuery(element).find(':selected').val() === 'select';
+                var frontSelectedWheel = findSelectedItemOfType(allItems, 'front');
+                var backSelectedWheel = findSelectedItemOfType(allItems, 'back');
+
+                resetDropdowns(allItems);
+
+                // if a front wheel has been selected
+                if (frontSelectedWheel) {
+                    var wheel_size = parseFloat(jQuery(frontSelectedWheel).attr('data-size'));
+                    var wheel_width = parseFloat(jQuery(frontSelectedWheel).attr('data-width'));
+
+                    disableInvalidOptions(allItems, 'front', wheel_size, wheel_width);
+                }
+
+                // if a back wheel has been selected
+                if (backSelectedWheel) {
+                    var wheel_size = parseFloat(jQuery(backSelectedWheel).attr('data-size'));
+                    var wheel_width = parseFloat(jQuery(backSelectedWheel).attr('data-width'));
+
+                    disableInvalidOptions(allItems, 'back', wheel_size, wheel_width);
+                }
+
+                // if a back and front wheel have been selected disable all other drop downs
+                if (backSelectedWheel && frontSelectedWheel) {
+                    allItems.each(function() {
+                        if (jQuery(this).find(':selected').val() === 'select') {
+                            jQuery(this).attr('disabled', 'disabled');
+                        }
+                    });
+                    jQuery('button[type=button]','#Sizes').removeAttr('disabled');
+                }
+
+                // if there is only one compatible wheel left assign it, if the user deselected the option reset all drop downs
+                var availableItems = jQuery(allItems).not(":disabled");
+                if (availableItems.length === 2) {
+                    (unselectionMade) ? resetDropdowns(allItems, availableItems) : assignRemainingOption(allItems, availableItems);
+                }
+            }
+
+            function assignRemainingOption(allItems, availableItems) {
+
+                // returns true if drop down has no selected wheel
+                var findUnassignedDropdown = function(item) {
+                    return jQuery(item).find(':selected').val() === 'select'
+                };
+
+                var assignedDropdownValue = jQuery(jQuery.grep(availableItems, function (item) {
+                        return findUnassignedDropdown(item)
+                    }, true)).find(":selected").val();
+
+                var unassignedDropdown = jQuery.grep(availableItems, function (item) {
+                        return findUnassignedDropdown(item)
+                    });
+
+                var unassignedDropdownValue;
+                if (assignedDropdownValue === 'front') {
+                    unassignedDropdownValue = 'back';
+                } else {
+                    unassignedDropdownValue = 'front';
+                }
+
+                jQuery(unassignedDropdown).val(unassignedDropdownValue).attr('selected', 'selected');
+
+                // disable selection of assigned value in all other drop downs
+                allItems.each(function() {
+                    jQuery(this.options).each(function () {
+                        if (jQuery(this).val() === unassignedDropdownValue) {
+                            jQuery(this).attr('disabled', 'disabled');
+                        }
+                    });
+                });
+
+                jQuery('button[type=button]','#Sizes').removeAttr('disabled');
+            }
+
+            function disableInvalidOptions(allItems, type, wheel_size, wheel_width) {
+                allItems.each(function() {
+
+                    // disable all wheels that are not same size as selected
+                    if (wheel_size !== parseFloat(jQuery(this).attr('data-size'))) {
+                        jQuery(this).attr('disabled', 'disabled');
+                    }
+
+                    // disable all non-compatible wheels of selected
+                    var this_width = parseFloat(jQuery(this).attr('data-width'));
+                    if (((type === 'back' && wheel_width <= this_width) ||
+                        (type === 'front' && wheel_width >= this_width)) &&
+                        jQuery(this).find(':selected').attr('value') === 'select') {
+
+                        jQuery(this).attr('disabled', 'disabled');
+                    } else {
+
+                        // disable options with same value as already selected
+                        jQuery(this.options).each(function() {
+                            if (jQuery(this).attr('value') === type) {
+                                jQuery(this).attr('disabled', 'disabled');
+                            }
+                        });
+                    }
+                });
+            }
+
+            function findSelectedItemOfType(allItems, type) {
+                var selected = false;
+
+                allItems.each(function() {
+                    if (jQuery(this).find(':selected').attr('value') === type) {
+                        selected = jQuery(this);
+                    }
+                });
+
+                return selected;
+            }
+
+            function resetDropdowns(allItems, availableItems) {
+
+                // if only two items left remove selected values
+                if (availableItems) jQuery(availableItems).val('select').attr('selected', 'selected');
+
+                // enable all options for selection
+                jQuery(allItems).removeAttr('disabled');
+                jQuery(allItems).each(function () {
+                    jQuery(this.options).each(function () {
+                        jQuery(this).removeAttr('disabled');
+                    })
+                });
+
+                jQuery('button[type=button]','#Sizes').attr('disabled', 'disabled');
+            };
+
+            function assignStaggeredTires() {
+                return 'hello';
+            }
+
+            function loadScript(src, callback) {
+                var s,
+                    r,
+                    t;
+                r = false;
+                s = document.createElement('script');
+                s.type = 'text/javascript';
+                s.src = src;
+                s.onload = s.onreadystatechange = function() {
+                    //console.log( this.readyState ); //uncomment this line to see which ready states are called.
+                    if ( !r && (!this.readyState || this.readyState == 'complete') )
+                    {
+                        r = true;
+                        callback();
+                    }
+                };
+                t = document.getElementsByTagName('script')[0];
+                t.parentNode.insertBefore(s, t);
+            }
+
+            function addStaggeredToCart() {
+                jQuery('tr','#Sizes')
+                    .filter(function(index,item){ //only return rows that has input in them and the dropdown is either front or back
+                        var select = jQuery('select',jQuery(item));
+                        if (select.length < 1) return false;
+                        else if (select.find(':selected').val()==='select')
+                            return false;
+                        else return true;
+                    })
+                    .each(function(index,item){
+                        jQuery('form',jQuery(item)).submit();
+                    })
+
+            }
+
+        </script>
+    </div>
+<?php endif; ?>
+<?php else: ?>
+<div class="additional-attributes-wrapper table-wrapper">Related products is not available.</div>
+<?php endif; ?>
+
+
+<script type="text/x-magento-init">
+{
+"[data-role=tocart-form], .form.map.checkout": {
+    "catalogAddToCart": {}
+}
+}
+
+</script>
+
+<script type="text/javascript">
+                    require([
+                        'jquery'
+                        ], function($){
+                        jQuery(document).ready(function($) {
+                           jQuery(".btn_question").click(function(){
+                                var idd = jQuery(this).attr("id");
+                                jQuery("#block_"+idd).toggle();
+                            });
+                        });
+                    });
+                </script>
